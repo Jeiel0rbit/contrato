@@ -141,20 +141,38 @@
         resizeCanvas();
         window.addEventListener('resize', resizeCanvas);
 
+        function getTouchPos(canvas, touchEvent) {
+            const rect = canvas.getBoundingClientRect();
+            return {
+                x: touchEvent.touches[0].clientX - rect.left,
+                y: touchEvent.touches[0].clientY - rect.top
+            };
+        }
+
         function startDrawing(e) {
             isDrawing = true;
-            [lastX, lastY] = [
-                e.type === 'mousedown' ? e.offsetX : e.touches[0].clientX - canvas.offsetLeft,
-                e.type === 'mousedown' ? e.offsetY : e.touches[0].clientY - canvas.offsetTop
-            ];
+            if (e.type === 'mousedown') {
+                [lastX, lastY] = [e.offsetX, e.offsetY];
+            } else if (e.type === 'touchstart') {
+                const touchPos = getTouchPos(canvas, e);
+                [lastX, lastY] = [touchPos.x, touchPos.y];
+            }
+            e.preventDefault();
         }
 
         function draw(e) {
             if (!isDrawing) return;
             e.preventDefault();
 
-            const currentX = e.type === 'mousemove' ? e.offsetX : e.touches[0].clientX - canvas.offsetLeft;
-            const currentY = e.type === 'mousemove' ? e.offsetY : e.touches[0].clientY - canvas.offsetTop;
+            let currentX, currentY;
+            if (e.type === 'mousemove') {
+                currentX = e.offsetX;
+                currentY = e.offsetY;
+            } else if (e.type === 'touchmove') {
+                const touchPos = getTouchPos(canvas, e);
+                currentX = touchPos.x;
+                currentY = touchPos.y;
+            }
 
             ctx.beginPath();
             ctx.moveTo(lastX, lastY);
@@ -167,8 +185,9 @@
             [lastX, lastY] = [currentX, currentY];
         }
 
-        function stopDrawing() {
+        function stopDrawing(e) {
             isDrawing = false;
+            e.preventDefault();
         }
 
         // Event listeners para mouse e touch
@@ -180,6 +199,7 @@
         canvas.addEventListener('touchstart', startDrawing);
         canvas.addEventListener('touchmove', draw);
         canvas.addEventListener('touchend', stopDrawing);
+        canvas.addEventListener('touchcancel', stopDrawing);
 
         // Função para verificar se o canvas está vazio
         function isCanvasEmpty() {
