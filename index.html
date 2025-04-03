@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Contrato de Serviço</title>
+    <meta name="description" content="Contrato eletrônico de prestação de serviços entre PRESTADOR e CONTRATANTE, detalhando os termos e condições do serviço prestado.">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://html2canvas.hertzen.com/dist/html2canvas.min.js"></script>
+    <style>
+        @media print {
+            body {
+                background: none;
+            }
+            .max-w-2xl {
+                max-width: none;
+                margin: 0;
+                padding: 20px;
+                box-shadow: none;
+            }
+            button {
+                display: none !important;
+            }
+        }
+    </style>
+</head>
+<body class="bg-gray-100 p-4">
+    <div class="max-w-2xl mx-auto bg-white p-6 rounded-lg shadow-md">
+        <h1 class="text-xl font-bold mb-4">Contrato de Serviço</h1>
+        <div id="contract-content" class="space-y-4 text-gray-700">
+            <p>Este contrato é celebrado entre <strong>Jeiel Miranda (jeiel.pages.dev)</strong>, doravante denominado PRESTADOR, e o cliente assinante, doravante denominado CONTRATANTE, com o objetivo de estabelecer as condições de prestação de serviços web.</p>
+            
+            <h2 class="text-lg font-semibold">1. OBJETO</h2>
+            <p>O PRESTADOR se compromete a desenvolver e manter um site de uma página (portfolio, link bio ou similar), incluindo domínio (ex: .com.br), hospedagem, monitoramento contínuo e proteção contra ataques DDoS e outros tipos de ataques, exceto em casos de força maior, pelo valor anual de R$ 200,00 (duzentos reais).</p>
+            
+            <h2 class="text-lg font-semibold">2. PRAZO E PAGAMENTO</h2>
+            <p>2.1. O contrato tem validade de 12 (doze) meses, renováveis automaticamente mediante pagamento da anuidade.</p>
+            <p>2.2. Em caso de atraso no pagamento, será cobrada multa de R$ 10,00 (dez reais) por dia de atraso, acumulativa ao valor original.</p>
+            <p>2.3. Após 7 (sete) dias de atraso, o site será redirecionado para uma página de "manutenção".</p>
+            
+            <h2 class="text-lg font-semibold">3. TRANSFERÊNCIA E CÓDIGO FONTE</h2>
+            <p>3.1. O CONTRATANTE pode solicitar a transferência do domínio, arcando com os custos envolvidos.</p>
+            <p>3.2. O CONTRATANTE pode solicitar o código fonte da página, desenvolvido geralmente em Next.js, hospedado na Vercel, com domínio registrado na Hostinger e proteção na Cloudflare.</p>
+            
+            <h2 class="text-lg font-semibold">4. DIVULGAÇÃO DE AUTORIA</h2>
+            <p>4.1. Todas as páginas criadas exibirão no cabeçalho a autoria "Desenvolvido por Jeiel Miranda (jeiel.pages.dev)".</p>
+            <p>4.2. Caso o CONTRATANTE não concorde com a divulgação visível, a autoria será inserida no código fonte, acessível apenas via inspeção de código no navegador.</p>
+            
+            <h2 class="text-lg font-semibold">5. ALTERAÇÕES E PÁGINAS ADICIONAIS</h2>
+            <p>5.1. Alterações na página única estão incluídas no valor anual.</p>
+            <p>5.2. Páginas adicionais terão custo de R$ 100,00 (cem reais) por página, totalizando R$ 300,00 (trezentos reais) anuais para duas páginas.</p>
+            
+            <h2 class="text-lg font-semibold">6. CANCELAMENTO E REEMBOLSO</h2>
+            <p>6.1. O CONTRATANTE pode cancelar o serviço a qualquer momento, sem direito a reembolso após 7 (sete) dias de garantia.</p>
+            <p>6.2. Em caso de cancelamento dentro do período de garantia, será questionado sobre a transferência do domínio. Caso não haja resposta em 72 horas ou a resposta seja negativa, o domínio será excluído e disponibilizado para registro por terceiros.</p>
+            
+            <h2 class="text-lg font-semibold">7. ACEITAÇÃO</h2>
+            <p>Ao assinar este contrato, o CONTRATANTE declara estar ciente e de acordo com todas as condições acima estabelecidas.</p>
+
+            <h2 class="text-lg font-semibold">8. INFORMAÇÕES DO CONTRATANTE</h2>
+            <p><strong>Nome Completo:</strong></p>
+            <input id="user-name" type="text" class="w-full border rounded p-2 mb-2" placeholder="Digite seu nome completo" />
+
+            <p><strong>E-mail:</strong></p>
+            <input id="user-email" type="email" class="w-full border rounded p-2 mb-2" placeholder="Digite seu e-mail" />
+
+            <p><strong>IP:</strong> <span id="user-ip">Carregando...</span></p>
+            <p><strong>Localização (GPS):</strong> <span id="user-location">Carregando...</span></p>
+            <p><strong>Data e Hora (UTC-3):</strong> <span id="current-datetime">Carregando...</span></p>
+
+            <p><strong>Assinatura Eletrônica:</strong></p>
+            <canvas id="signature-pad" class="border rounded w-full h-32"></canvas>
+        </div>
+        <button onclick="printContract()" class="mt-4 bg-blue-500 text-white px-4 py-2 rounded-lg">Imprimir Contrato</button>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.4.0/jspdf.umd.min.js"></script>
+    <script>
+        // Capturar IP do usuário
+        fetch('https://api.ipify.org?format=json')
+            .then(response => response.json())
+            .then(data => {
+                document.getElementById('user-ip').innerText = data.ip;
+            })
+            .catch(() => {
+                document.getElementById('user-ip').innerText = 'Não foi possível obter o IP.';
+            });
+
+        // Modificar a parte da geolocalização
+        if (navigator.geolocation) {
+            const locationPromise = new Promise((resolve, reject) => {
+                navigator.geolocation.getCurrentPosition(
+                    position => {
+                        const { latitude, longitude } = position.coords;
+                        resolve(`Lat: ${latitude}, Long: ${longitude}`);
+                    },
+                    error => {
+                        reject('Permissão negada ou erro de geolocalização');
+                    },
+                    {
+                        timeout: 10000,
+                        maximumAge: 0,
+                        enableHighAccuracy: true
+                    }
+                );
+            });
+
+            locationPromise
+                .then(locationText => {
+                    document.getElementById('user-location').innerText = locationText;
+                })
+                .catch(error => {
+                    document.getElementById('user-location').innerText = error;
+                });
+        } else {
+            document.getElementById('user-location').innerText = 'Geolocalização não suportada.';
+        }
+
+        // Capturar data e hora no fuso horário UTC-3
+        function getUTC3DateTime() {
+            const now = new Date();
+            const utc3Offset = -3 * 60; // UTC-3 em minutos
+            const localTime = new Date(now.getTime() + utc3Offset * 60000);
+            return localTime.toLocaleString('pt-BR', { timeZone: 'America/Sao_Paulo' });
+        }
+        document.getElementById('current-datetime').innerText = getUTC3DateTime();
+
+        // Configurar assinatura eletrônica (canvas)
+        const canvas = document.getElementById('signature-pad');
+        const ctx = canvas.getContext('2d');
+        let isDrawing = false;
+        let lastX = 0;
+        let lastY = 0;
+
+        // Ajustar tamanho do canvas para corresponder ao tamanho exibido
+        function resizeCanvas() {
+            const rect = canvas.getBoundingClientRect();
+            canvas.width = rect.width;
+            canvas.height = rect.height;
+        }
+        resizeCanvas();
+        window.addEventListener('resize', resizeCanvas);
+
+        function startDrawing(e) {
+            isDrawing = true;
+            [lastX, lastY] = [
+                e.type === 'mousedown' ? e.offsetX : e.touches[0].clientX - canvas.offsetLeft,
+                e.type === 'mousedown' ? e.offsetY : e.touches[0].clientY - canvas.offsetTop
+            ];
+        }
+
+        function draw(e) {
+            if (!isDrawing) return;
+            e.preventDefault();
+
+            const currentX = e.type === 'mousemove' ? e.offsetX : e.touches[0].clientX - canvas.offsetLeft;
+            const currentY = e.type === 'mousemove' ? e.offsetY : e.touches[0].clientY - canvas.offsetTop;
+
+            ctx.beginPath();
+            ctx.moveTo(lastX, lastY);
+            ctx.lineTo(currentX, currentY);
+            ctx.strokeStyle = '#000';
+            ctx.lineWidth = 2;
+            ctx.lineCap = 'round';
+            ctx.stroke();
+
+            [lastX, lastY] = [currentX, currentY];
+        }
+
+        function stopDrawing() {
+            isDrawing = false;
+        }
+
+        // Event listeners para mouse e touch
+        canvas.addEventListener('mousedown', startDrawing);
+        canvas.addEventListener('mousemove', draw);
+        canvas.addEventListener('mouseup', stopDrawing);
+        canvas.addEventListener('mouseout', stopDrawing);
+
+        canvas.addEventListener('touchstart', startDrawing);
+        canvas.addEventListener('touchmove', draw);
+        canvas.addEventListener('touchend', stopDrawing);
+
+        // Função para verificar se o canvas está vazio
+        function isCanvasEmpty() {
+            const pixels = ctx.getImageData(0, 0, canvas.width, canvas.height).data;
+            return !pixels.some(pixel => pixel !== 0);
+        }
+
+        // Modificar a função saveAndSharePDF
+        async function printContract() {
+            const name = document.getElementById('user-name').value;
+            const email = document.getElementById('user-email').value;
+
+            if (!name || !email) {
+                alert('Por favor, preencha seu nome completo e e-mail.');
+                return;
+            }
+
+            if (isCanvasEmpty()) {
+                alert('Por favor, adicione sua assinatura.');
+                return;
+            }
+
+            // Hide buttons temporarily
+            const buttons = document.querySelectorAll('button');
+            buttons.forEach(button => button.style.display = 'none');
+
+            // Trigger print dialog
+            window.print();
+
+            // Show buttons again after a short delay
+            setTimeout(() => {
+                buttons.forEach(button => button.style.display = '');
+            }, 1000);
+        }
+    </script>
+</body>
+</html>
